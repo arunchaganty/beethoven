@@ -4,6 +4,22 @@ Genetic Algorithm Builder
 
 from random import randint
 
+class Gene:
+    def __init__(self):
+        self.fitness = self.get_fitness()
+
+    def __str__(self):
+        return "Gene: fitness " + self.fitness
+
+    def __repr__(self):
+        return "<Gene>: fitness " + self.fitness
+
+    def get_fitness(self):
+        return 0
+
+    def mate(self, other):
+        return Gene()
+
 def binsearch(items, val, get=lambda x: x):
     """
     Returns the item in items whose bucket contains val - assumes items is (item, bottom of bucket)
@@ -30,8 +46,16 @@ def roulette(items, num, get=lambda x: x):
     selection = [ binsearch(items, randint(0, get(max_value)), get) for i in xrange(num)]
     return selection
 
-def evolve(population, population_limit):
+def evolve(population):
+    """
+    Evolve the initial population a generation at a time
+    Expects that the input population is a class that computes 
+    the fitness and mates two members
+    """
     # Initialise the algorithm
+
+    population_limit = len(population)
+    population.sort(key = lambda x: x.fitness)
 
     while(True):
         # Select Breeders
@@ -42,16 +66,18 @@ def evolve(population, population_limit):
         items = []
         for x in population: 
             sum += x.fitness
-            items += (x, sum)
+            items.append((x, sum))
         
-        matables = roulette(items)
-        
-        
-        
+        matables = roulette(items, population_limit, lambda x: x[1])
+        mating_pairs = [(matables[i][0], matables[i+len(matables)/2][0]) for i in xrange(len(matables)/2)]
+
         # Mate Pairs
-        
+        for pair in mating_pairs:
+            population += pair[0].mate(pair[1])
         
         # Select fittest
-        population.sort(cmp = lambda x,y: x.fitness - y.fitness)
+        population.sort(key = lambda x: x.fitness)
         population = population[:population_limit]
+
+        yield population
         
