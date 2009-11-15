@@ -27,12 +27,12 @@ def import_population(filename):
 
     return population
 
-def print_popluation(population):
+def print_popluation(population, play=False):
     for i in xrange(len(population)):
         track = population[i]
         print "Track #%d:"%i
         print track
-        track.play()
+        if play: track.play()
     return
 
 
@@ -43,6 +43,9 @@ if __name__ == "__main__":
     if len(sys.argv) == 2:
         if sys.argv[1] == "-v" or sys.argv[1] == "--verbose":
             verbose = True
+        elif sys.argv[1] == "-vv" or sys.argv[1] == "--very-verbose":
+            verbose = True
+            play = True
         elif sys.argv[1] == "-h" or sys.argv[1] == "--help":
             print "Usage: %s [-v|-h]"%(sys.argv[0])
             sys.exit(-1)

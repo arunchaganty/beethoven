@@ -9,24 +9,47 @@ class MusicGene(Gene):
 
     def __str__(self):
         str_ = "MusicGene: " + "fitness " + str(self.fitness) + '\n' 
-        for bar in self.track:
-            for note in bar.get_note_names():
-                str_ += note + " "
+        str_ += self.print_track(self.track)
         return str_
 
     def __repr__(self):
         return str(self)
 
+    def print_track(self, track):
+        str_ = ""
+        for bar in track:
+            for note in bar.get_note_names():
+                str_ += note + " "
+        return str_
+
     def get_fitness(self):
-        return 0
+        return 0.1
 
     def mate(self, other):
-        return MusicGene(self.track)
+        # Most naive method - interleave bars
+        assert(len(self.track) == len(other.track))
+        children = []
+
+        track = Track()
+        for i in xrange(len(self.track)):
+            if i%2 == 0:
+                track.add_bar(self.track[i])
+            else:
+                track.add_bar(other.track[i])
+
+        print "Mating:"
+        print "P1: " + self.print_track(self.track)
+        print "P2: " + self.print_track(other.track)
+        print "C1: " + self.print_track(track)
+
+        children.append(MusicGene(track))
+
+        return children
+
 
     def mutate(self):
         return self
 
     def play(self):
         fluidsynth.play_Track(self.track)
-
 

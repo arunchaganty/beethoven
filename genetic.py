@@ -2,6 +2,8 @@
 Genetic Algorithm Builder
 """
 
+import pdb
+
 from random import randint, random
 from Gene import Gene
 
@@ -30,7 +32,7 @@ def roulette(items, num, get=lambda x: x):
     """
     max_value = max(items, key=get)
 
-    selection = [ binsearch(items, randint(0, get(max_value)), get) for i in xrange(num)]
+    selection = [ binsearch(items, random() *  (get(max_value)), get) for i in xrange(num)]
     return selection
 
 def evolve(population):
@@ -61,10 +63,10 @@ def evolve(population):
 
         # Mate Pairs
         for pair in mating_pairs:
-            child = pair[0].mate(pair[1])
+            children = pair[0].mate(pair[1])
             if random() < mutation_rate:
-                child = child.mutate()
-            population.append(child)
+                children = [child.mutate() for child in children]
+            population += children
         
         # Select fittest
         population.sort(key = lambda x: x.fitness)
