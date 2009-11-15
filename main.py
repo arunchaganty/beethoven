@@ -6,13 +6,52 @@
 import pdb
 
 import sys
+import os
 import time
+import re
+
 import genetic
 from Gene import *
 from MusicGene import *
+from mingus.midi import MidiFileIn 
 
 SF2 = "/usr/share/soundfonts/fluidr3/FluidR3GM.SF2"
 DRIVER = "alsa"
+
+def chop_evenly(track, n_bars):
+    """
+    Evenly chop up a track into sets of 'n_bars' bars
+    Discards an uneven set of bars at the very end
+    """
+
+    tracks = [] 
+    bars = track.bars[:]
+    while(len(bars) > n_bars):
+        bars_ = bars[:n_bars]
+        bars = bars[n_bars:]
+
+        track_ = Track()
+        track_.bars = bars_
+
+        tracks.append(track_)
+        
+    return tracks 
+
+def import_midi_db(dir):
+    mid_re = re.compile("[^.]*\.mid")
+    population = []
+    for root, dirs, files in os.walk(dir):
+        for file in files:
+            print file
+            if mid_re.match(file):
+                composition, bpm = MidiFileIn.MIDI_to_Composition(os.path.join(root,file))
+                super_track =  
+                for track in composition:
+                    tracks = chop_evenly(track, 16)
+                    genes = [MusicGene(track) for track in tracks]
+                    population += genes
+
+    return population
 
 def import_population(filename):
     file = open(filename, "r")
@@ -60,11 +99,11 @@ if __name__ == "__main__":
             sys.exit(-1)
 
     if play: fluidsynth.init(SF2, DRIVER)
-    population = import_population("initial.db")
+    population = import_midi_db("test")
     g = genetic.evolve(population)
 
     print "Generation #%d"%0
-    if verbose and False:
+    if verbose:
         print_popluation(population, play)
 
     for i in xrange(10):

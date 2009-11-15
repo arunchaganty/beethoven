@@ -100,10 +100,12 @@ class MusicGene(Gene):
         return str_
 
     def get_fitness(self):
-        wt = (0.5, 1, 3)
-        features = (range_evaluator(self.track), contour_evaluator(self.track), consonance_evaluator(self.track))
+        #wt = (0.5, 1, 3)
+        #features = (range_evaluator(self.track), contour_evaluator(self.track), consonance_evaluator(self.track))
+        wt = (0.5,)
+        features = (range_evaluator(self.track),)
         fitness = inner_pdt(wt, features)
-        return fitness
+        return -fitness
 
     def mate(self, other):
         # Most naive method - interleave bars
