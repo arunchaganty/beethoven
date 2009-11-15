@@ -45,7 +45,7 @@ def evolve(population):
 
     population_limit = len(population)
     mutation_rate = MUTATION_RATE
-    population.sort(key = lambda x: x.fitness)
+    population.sort(key = lambda x: x.fitness, reverse=True)
 
     while(True):
         # Select Breeders
@@ -69,7 +69,7 @@ def evolve(population):
             population += children
         
         # Select fittest
-        population.sort(key = lambda x: x.fitness)
+        population.sort(key = lambda x: x.fitness, reverse=True)
         population = population[:population_limit]
 
         yield population
