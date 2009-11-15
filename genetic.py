@@ -3,22 +3,9 @@ Genetic Algorithm Builder
 """
 
 from random import randint
+from Gene import Gene
 
-class Gene:
-    def __init__(self):
-        self.fitness = self.get_fitness()
-
-    def __str__(self):
-        return "Gene: fitness " + self.fitness
-
-    def __repr__(self):
-        return "<Gene>: fitness " + self.fitness
-
-    def get_fitness(self):
-        return 0
-
-    def mate(self, other):
-        return Gene()
+MUTATION_RATE = 0.0001
 
 def binsearch(items, val, get=lambda x: x):
     """
@@ -55,6 +42,7 @@ def evolve(population):
     # Initialise the algorithm
 
     population_limit = len(population)
+    mutation_rate = MUTATION_RATE
     population.sort(key = lambda x: x.fitness)
 
     while(True):
@@ -73,7 +61,10 @@ def evolve(population):
 
         # Mate Pairs
         for pair in mating_pairs:
-            population += pair[0].mate(pair[1])
+            child = pair[0].mate(pair[1])
+            if random.random() < mutation_rate:
+                child = child.mutate()
+            population += child
         
         # Select fittest
         population.sort(key = lambda x: x.fitness)

@@ -1,0 +1,2 @@
+This module takes a MIDI file and outputs the sequence of IR "symbols" seen.
+
