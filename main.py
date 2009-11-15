@@ -58,9 +58,8 @@ if __name__ == "__main__":
         print_popluation(population)
 
     for i in xrange(10):
-        pdb.set_trace()
         pop = g.next()
-        print "Generation #%d"%i
+        print "Generation #%d"%(i+1)
         if verbose:
             print_popluation(population)
     
