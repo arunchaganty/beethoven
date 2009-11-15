@@ -1,9 +1,11 @@
+#!/usr/bin/env python
 #
 #   Beethoven 
 #
 
 import pdb
 
+import sys
 import genetic
 from Gene import *
 from MusicGene import *
@@ -25,23 +27,41 @@ def import_population(filename):
 
     return population
 
+def print_popluation(population):
+    for i in xrange(len(population)):
+        track = population[i]
+        print "Track #%d:"%i
+        print track
+        track.play()
+    return
+
+
 if __name__ == "__main__":
     fluidsynth.init(SF2, DRIVER)
+    verbose = False
+
+    if len(sys.argv) == 2:
+        if sys.argv[1] == "-v" or sys.argv[1] == "--verbose":
+            verbose = True
+        elif sys.argv[1] == "-h" or sys.argv[1] == "--help":
+            print "Usage: %s [-v|-h]"%(sys.argv[0])
+            sys.exit(-1)
+        else:
+            print "Usage: %s [-v|-h]"%(sys.argv[0])
+            sys.exit(-1)
 
     population = import_population("initial.db")
     g = genetic.evolve(population)
 
     print "Generation #%d"%0
-    for i in xrange(len(population)):
-        print "Track #%d"%i
-        population[i].play()
+    if verbose:
+        print_popluation(population)
 
     for i in xrange(10):
         pdb.set_trace()
         pop = g.next()
         print "Generation #%d"%i
-        for i in xrange(len(population)):
-            print "Track #%d"%i
-            population[i].play()
+        if verbose:
+            print_popluation(population)
+    
         
-

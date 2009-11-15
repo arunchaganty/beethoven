@@ -2,7 +2,7 @@
 Genetic Algorithm Builder
 """
 
-from random import randint
+from random import randint, random
 from Gene import Gene
 
 MUTATION_RATE = 0.0001
@@ -62,9 +62,9 @@ def evolve(population):
         # Mate Pairs
         for pair in mating_pairs:
             child = pair[0].mate(pair[1])
-            if random.random() < mutation_rate:
+            if random() < mutation_rate:
                 child = child.mutate()
-            population += child
+            population.append(child)
         
         # Select fittest
         population.sort(key = lambda x: x.fitness)
