@@ -129,8 +129,11 @@ class IntervallicTransitionTable(TransitionTable):
             state_ = TransitionTable.transit(self, state)
             interval, pitch = state_
             note3 = intervals.get_interval(get_note(note2), interval)
+            # Limiting Dissonance seems to make a _huge_ improvement to output
+            # Getting rid of Dissonance all together is _even better_
             if (intervals.is_dissonant(get_note(note2), note3)):
-                if random.random() > 0.01: continue # Cut off any dissonant transitions with high probability
+                continue
+                #if random.random() > 0.01: continue # Cut off any dissonant transitions with high probability
             try:
                 self.scale.index(note3)
                 note3 = "%s-%d"%(note3,pitch)
