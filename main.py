@@ -69,8 +69,16 @@ def import_population(filename):
 
     return population
 
-def print_popluation(population, play=False):
-    for i in xrange(len(population)):
+def print_popluation(population, play=False, all=False):
+    if all:
+        cnt = len(population)
+    else:
+        if len(population) < 3:
+            cnt = len(population)
+        else:
+            cnt = 3
+
+    for i in xrange(cnt):
         track = population[i]
         print "Track #%d:"%i
         print track
@@ -83,6 +91,7 @@ def print_popluation(population, play=False):
 if __name__ == "__main__":
     verbose = False
     play = False
+    all = False
 
     if len(sys.argv) == 2:
         if sys.argv[1] == "-v" or sys.argv[1] == "--verbose":
@@ -90,6 +99,10 @@ if __name__ == "__main__":
         elif sys.argv[1] == "-vv" or sys.argv[1] == "--very-verbose":
             verbose = True
             play = True
+        elif sys.argv[1] == "-vvv" or sys.argv[1] == "--very-verbose":
+            verbose = True
+            play = True
+            all = True
         elif sys.argv[1] == "-h" or sys.argv[1] == "--help":
             print "Usage: %s [-v|-vv|-h]"%(sys.argv[0])
             sys.exit(-1)
@@ -103,12 +116,14 @@ if __name__ == "__main__":
 
     print "Generation #%d"%0
     if verbose:
-        print_popluation(population, play)
+        print_popluation(population, play, all)
 
     for i in xrange(10):
         pop = g.next()
+        if verbose:
+            print_popluation(population, play, all)
         print "Generation #%d"%(i+1)
     if verbose:
-        print_popluation(population, play)
+        print_popluation(population, play, all)
     
         

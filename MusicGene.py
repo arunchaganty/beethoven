@@ -2,7 +2,7 @@ import pdb
 
 from Gene import Gene
 from mingus.containers import *
-from mingus.core import intervals, notes
+from mingus.core import *
 from mingus.midi import fluidsynth
 
 def normalise_note(note):
@@ -10,15 +10,40 @@ def normalise_note(note):
 
 def inner_pdt(x, y):
     assert(len(x) == len(y))
-
     wt = sum([x[i] * y[i] for i in xrange(len(x))])
-
     return wt
 
 def vector_sum(x, y):
     assert(len(x) == len(y))
-
     return tuple([x[i] + y[i] for i in xrange(len(x))])
+
+def remove_duplicates(lst):
+    assert(len(lst) > 0)
+    lst.sort()
+    lst_ = []
+    x = lst[0]
+    lst_.append(x)
+    for i in lst:
+        if i == x: continue
+        x = i
+        lst_.append(x)
+
+    return lst_
+
+def merge_note_container(noteC):
+    key = [normalise_note(note) for note in noteC]
+    key = remove_duplicates(key)
+    if len(key) == 1: 
+        return Note(key[0])
+    chord = chords.determine(key, True, True, True)
+
+    if chord and notes.is_valid_note(chord[0]):
+        if len(chord) > 1 and (chord[1] == '#' or chord[1] == 'b'):
+            return Note(chord[:2])
+        else:
+            return Note(chord[0])
+    else: 
+        return None
 
 def range_evaluator(track):
     min, max = track[0].get_range()
@@ -37,6 +62,7 @@ def range_evaluator(track):
 
     return max - min
 
+# TODO: Should be a state machine that keeps track of the last (say) 2 - 3 notes
 def contour_evaluator(track):
     # Check difference between first and last notes to get the "direction" of
     # the bar
@@ -44,40 +70,24 @@ def contour_evaluator(track):
     wt = (0.4, 0.5, 0.2)
 
     contour = (0, 0, 0)
-    dir = 1
-    for bar in track:
-        #pdb.set_trace()
-        first, last = bar[0][2],bar[-1][2]
-        assert(len(first) == len(last) == 1)
-        dir_ = int(last[0]) - int(first[0])
-        if (dir > 0 and dir_ > 0) or (dir < 0 and dir_ < 0): contour = vector_sum(contour,(1, 0, 0))
-        elif (dir < 0 and dir_ > 0) or (dir > 0 and dir_ < 0): contour = vector_sum(contour,(0, 1, 0))
-        elif dir_ == 0: contour = vector_sum(contour,(0, 0, 1))
 
-        dir = dir_
+    dir = 0
+    note = Note()
+    for bar in track:
+        for beat_, duration_, note_ in bar:
+            if not note_: continue
+            note_ = merge_note_container(note_)
+            if not note_: continue
+            dir_ = int(note_) - int(note)
+
+            if (dir > 0 and dir_ > 0) or (dir < 0 and dir_ < 0): contour = vector_sum(contour,(1, 0, 0))
+            elif (dir < 0 and dir_ > 0) or (dir > 0 and dir_ < 0): contour = vector_sum(contour,(0, 1, 0))
+            elif dir_ == 0: contour = vector_sum(contour,(0, 0, 1))
+            dir = dir_
+    if sum(contour):
+        contour = tuple([value/sum(contour) for value in contour])
 
     return inner_pdt(contour, wt)
-
-def consonance_evaluator(track):
-    bar = track[0]
-    first, last = bar[0][2],bar[-1][2]
-
-    assert(len(first) == len(last) == 1)
-    first, last = first[0], last[0]
-
-    dissonants = 0
-    for bar in track:
-        #pdb.set_trace()
-        first_, last_ = bar[0][2],bar[-1][2]
-        assert(len(first_) == len(last_) == 1)
-        first_, last_ = first_[0] , last_[0]
-        if intervals.is_dissonant(normalise_note(last), normalise_note(first_)): dissonants += 1
-
-        first, last = first_, last_
-
-
-    return dissonants
-
 
 class MusicGene(Gene):
     def __init__(self, track):
@@ -100,12 +110,12 @@ class MusicGene(Gene):
         return str_
 
     def get_fitness(self):
-        #wt = (0.5, 1, 3)
-        #features = (range_evaluator(self.track), contour_evaluator(self.track), consonance_evaluator(self.track))
-        wt = (0.5,)
-        features = (range_evaluator(self.track),)
+        wt = (0.5, 1)
+        features = (range_evaluator(self.track), contour_evaluator(self.track))
+        #wt = (0.5,)
+        #features = (range_evaluator(self.track),)
         fitness = inner_pdt(wt, features)
-        return -fitness
+        return fitness
 
     def mate(self, other):
         # Most naive method - interleave bars
