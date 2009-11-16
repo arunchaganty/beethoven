@@ -1,12 +1,14 @@
 import pdb
 from mingus.core import *
 from mingus.containers import *
-import random
+
+import re,random
 
 LEAP = 7
 SKIP = 3
 UNISON = 0
 PitchRange = range(1,6)
+IntervalRange = range(-11,12)
 
 def xor(x, y):
     return (x and not y) or (not x and y)
@@ -27,9 +29,17 @@ def is_skip(interval):
 def is_unison(interval):
     return abs(interval)==UNISON
 
+def get_pitch(note):
+    pitch_re = re.compile("([^-]*)-([0-9])")
+    match = pitch_re.match(note)
+    if not match: raise ValueError
+    else: return int(match.groups()[1])
 
-def is_flat(interval):
-    return interval == 0
+def get_note(note):
+    pitch_re = re.compile("([^-]+)-([0-9])")
+    match = pitch_re.match(note)
+    if not match: raise ValueError
+    else: return match.groups()[0]
 
 # Whether this sequence maintains intervallic direction 
 # It's ok as long as you take a short jump after a long jump
@@ -96,26 +106,59 @@ class MonoTransitionTable(TransitionTable):
 
     def __create_trans(self, note, pitch):
         trans = []
-        norm = sum([self.wt((note,pitch),(note_,pitch_)) for note_ in self.scale for pitch_ in (-1,0,1)])
+        norm = sum([self.wt((note,pitch),(note_,pitch_)) for note_ in self.scale for pitch_ in (pitch-1,pitch,pitch+1)])
         for note_ in self.scale:
             for pitch_ in (pitch-1,pitch,pitch+1):
                 trans.append(("%s-%d"%(note_,pitch_), float(self.wt((note,pitch),(note_,pitch_))/norm)))
         return trans
 
 class IntervallicTransitionTable(TransitionTable):
+    def __init__(self, scale):
+        TransitionTable.__init__(self,scale)
+        self.__create_ttable()
+
+    def transit(self, state):
+        # Here the state has to be derived from the input - which are a set of
+        # notes
+
+        note1, note2 = state
+        interval, pitch = int(Note(note2)) - int(Note(note1)), get_pitch(note2)
+        state = (interval,pitch)
+
+        while(True):
+            state_ = TransitionTable.transit(self, state)
+            interval, pitch = state_
+            note3 = intervals.get_interval(get_note(note2), interval)
+            if (intervals.is_dissonant(get_note(note2), note3)):
+                if random.random() > 0.01: continue # Cut off any dissonant transitions with high probability
+            try:
+                self.scale.index(note3)
+                note3 = "%s-%d"%(note3,pitch)
+                break
+            except ValueError:
+                continue
+
+        state_ = (note2, note3)
+
+        return state_
+
     def wt(self, old, new):
         val = 0
-        if intervallic(old, new) and is_flat(new): val = 0.05
-        elif not intervallic(old, new) and is_flat(new): val = 0.05
+        old_interval, old_pitch = old
+        new_interval, new_pitch = new
 
-        elif intervallic(old, new) and is_leap(old) and registral(old, new): val = 0.4
-        elif intervallic(old, new) and is_leap(old) and not registral(old, new): val = 0.6
+        if new_pitch not in PitchRange: val = 0
+        elif intervallic(old_interval, new_interval) and is_flat(new_interval): val = 0.05
+        elif not intervallic(old_interval, new_interval) and is_flat(new_interval): val = 0.05
 
-        elif intervallic(old, new) and not is_leap(old) and registral(old, new): val = 0.5
-        elif intervallic(old, new) and not is_leap(old) and not registral(old, new): val = 0.5
+        elif intervallic(old_interval, new_interval) and is_leap(old_interval) and registral(old_interval, new_interval): val = 0.4
+        elif intervallic(old_interval, new_interval) and is_leap(old_interval) and not registral(old_interval, new_interval): val = 0.6
 
-        elif not intervallic(old, new) and registral(old, new): val = 0.2
-        elif not intervallic(old, new) and not registral(old, new): val = 0.2
+        elif intervallic(old_interval, new_interval) and not is_leap(old_interval) and registral(old_interval, new_interval): val = 0.5
+        elif intervallic(old_interval, new_interval) and not is_leap(old_interval) and not registral(old_interval, new_interval): val = 0.5
+
+        elif not intervallic(old_interval, new_interval) and registral(old_interval, new_interval): val = 0.2
+        elif not intervallic(old_interval, new_interval) and not registral(old_interval, new_interval): val = 0.2
 
         return val
 
@@ -129,11 +172,21 @@ class IntervallicTransitionTable(TransitionTable):
 
         len_ = len(self.scale)
 
-        keys = [(i,j) for i in range(-11, 12) for j in range(-11,12)]
-        normal=[sum([self.wt(i, j) for j in xrange(-11,12)]) for i in range(-11,12)]
-        kv = [(k,float(self.wt(*k))/normal[11+k[0]]) for k in keys]
+        kv = []
+        for pitch in PitchRange:
+            for interval in IntervalRange:
+                kv.append(((interval, pitch), self.__create_trans(interval,pitch)))
 
         ttable = dict(kv)
-
+        #pdb.set_trace()
         self.ttable = ttable
+
+    def __create_trans(self, interval, pitch):
+        trans = []
+        norm = sum([self.wt((interval,pitch),(interval_,pitch_)) for interval_ in IntervalRange for pitch_ in (pitch-1,pitch,pitch+1)])
+        for interval_ in IntervalRange:
+            for pitch_ in (pitch-1,pitch,pitch+1):
+                trans.append(((interval_,pitch_), float(self.wt((interval,pitch),(interval_,pitch_))/norm)))
+        return trans
+
 
