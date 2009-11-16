@@ -45,7 +45,6 @@ def import_midi_db(dir):
             print file
             if mid_re.match(file):
                 composition, bpm = MidiFileIn.MIDI_to_Composition(os.path.join(root,file))
-                super_track =  
                 for track in composition:
                     tracks = chop_evenly(track, 16)
                     genes = [MusicGene(track) for track in tracks]
