@@ -55,7 +55,7 @@ class NoviceComposer(MusicComposer):
         self.ttable = TransitionTable.IntervallicTransitionTable(scale)
 
     def compose(self):
-        cur_note = "%s-%d"%(random.choice(self.scale), random.choice(PitchRange))
+        cur_note = "%s-%d"%(random.choice(self.scale), 3)
         state = (cur_note, cur_note)
         while(1):
             yield cur_note

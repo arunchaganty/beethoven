@@ -151,8 +151,8 @@ class IntervallicTransitionTable(TransitionTable):
         new_interval, new_pitch = new
 
         if new_pitch not in PitchRange: val = 0
-        elif intervallic(old_interval, new_interval) and is_flat(new_interval): val = 0.05
-        elif not intervallic(old_interval, new_interval) and is_flat(new_interval): val = 0.05
+        elif intervallic(old_interval, new_interval) and is_unison(new_interval): val = 0.05
+        elif not intervallic(old_interval, new_interval) and is_unison(new_interval): val = 0.05
 
         elif intervallic(old_interval, new_interval) and is_leap(old_interval) and registral(old_interval, new_interval): val = 0.4
         elif intervallic(old_interval, new_interval) and is_leap(old_interval) and not registral(old_interval, new_interval): val = 0.6
