@@ -9,6 +9,7 @@ import sys
 import os
 import time
 import re
+import random
 
 import genetic
 from Gene import *
@@ -73,7 +74,7 @@ def print_popluation(population, play=False, all=False):
     if all:
         cnt = len(population)
     else:
-        if len(population) < 3:
+        if len(population) < 0:
             cnt = len(population)
         else:
             cnt = 3
@@ -111,19 +112,20 @@ if __name__ == "__main__":
             sys.exit(-1)
 
     if play: fluidsynth.init(SF2, DRIVER)
-    population = import_midi_db("test")
+    #population = import_midi_db("test")
+    population = import_population("initial.db")
     g = genetic.evolve(population)
 
-    print "Generation #%d"%0
-    if verbose:
-        print_popluation(population, play, all)
+    print "Generation #%d (size=%d)"%(0, len(population))
+    #if verbose:
+    #    print_popluation(population, play, all)
 
-    for i in xrange(10):
+    for i in xrange(100):
         pop = g.next()
-        if verbose:
-            print_popluation(population, play, all)
-        print "Generation #%d"%(i+1)
+        #if verbose:
+        #    print_popluation(population, play, all)
+        print "Generation #%d (size=%d)"%((i+1),len(population))
     if verbose:
-        print_popluation(population, play, all)
+        print_popluation(population, play, True)
     
         

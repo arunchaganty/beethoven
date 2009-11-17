@@ -35,7 +35,7 @@ def roulette(items, num, get=lambda x: x):
     selection = [ binsearch(items, random() *  (get(max_value)), get) for i in xrange(num)]
     return selection
 
-def evolve(population):
+def evolve(population, population_limit=100):
     """
     Evolve the initial population a generation at a time
     Expects that the input population is a class that computes 
@@ -43,7 +43,6 @@ def evolve(population):
     """
     # Initialise the algorithm
 
-    population_limit = len(population)
     mutation_rate = MUTATION_RATE
     population.sort(key = lambda x: x.fitness, reverse=True)
 
@@ -58,7 +57,8 @@ def evolve(population):
             sum += x.fitness
             items.append((x, sum))
         
-        matables = roulette(items, population_limit, lambda x: x[1])
+        population_size = len(population)
+        matables = roulette(items, population_size, lambda x: x[1])
         mating_pairs = [(matables[i][0], matables[i+len(matables)/2][0]) for i in xrange(len(matables)/2)]
 
         # Mate Pairs
@@ -70,7 +70,8 @@ def evolve(population):
         
         # Select fittest
         population.sort(key = lambda x: x.fitness, reverse=True)
-        population = population[:population_limit]
+        if(len(population) > population_limit):
+            population[:] = population[0:population_limit]
 
         yield population
         
