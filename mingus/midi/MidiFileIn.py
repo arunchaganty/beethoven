@@ -157,6 +157,9 @@ class MidiFile():
 
 					# Key Signature
 					elif event["meta_event"] == 89:
+						d = event["data"]
+                        key = self.bytes_to_int(d[0])
+                        minor = self.bytes_to_int(d[0])
 						pass
 
 					else:
