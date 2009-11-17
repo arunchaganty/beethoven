@@ -1,4 +1,5 @@
 import pdb
+import random
 
 from Gene import Gene
 from mingus.containers import *
@@ -118,6 +119,15 @@ class MusicGene(Gene):
         return fitness
 
     def mate(self, other):
+        return self.interleaved_single_pt_crossover(other)
+
+    def interleaved_single_pt_crossover(self, other):
+        if (random.randint(0,1)):
+            return self.single_pt_crossover(other)
+        else:
+            return self.interleave_crossover(other)
+
+    def single_pt_crossover(self, other):
         # Most naive method - interleave bars
         #print "Mating:"
         #print "P1: " + self.print_track(self.track)
@@ -125,19 +135,58 @@ class MusicGene(Gene):
         assert(len(self.track) == len(other.track))
         children = []
 
-        track = Track()
+        note_count = 0
+        for bar in self.track:
+            note_count += len(bar)
+        crossover = random.randint(0, note_count)
+
+        child = Track()
+        child_ = Track()
+        note_count = 0
         for i in xrange(len(self.track)):
-            if i%2 == 0:
-                track.add_bar(self.track[i])
-            else:
-                track.add_bar(other.track[i])
+            bar = self.track[i]
+            bar_ = other.track[i]
+            for j in xrange(len(bar)):
+                beat, duration, notes = bar[j]
+                beat_, duration_, notes_ = bar_[j]
+                note_count+=1
+                if note_count < crossover:
+                    child.add_notes(notes, duration)
+                    child_.add_notes(notes_, duration_)
+                else:
+                    child.add_notes(notes_, duration_)
+                    child_.add_notes(notes, duration)
 
-        #print "C1: " + self.print_track(track)
-
-        children.append(MusicGene(track))
+        children += [MusicGene(child), MusicGene(child_)]
 
         return children
 
+    def interleave_crossover(self, other):
+        assert(len(self.track) == len(other.track))
+
+        children = []
+
+        child = Track()
+        child_ = Track()
+
+        note_count = 0
+        for i in xrange(len(self.track)):
+            bar = self.track[i]
+            bar_ = other.track[i]
+            for j in xrange(len(bar)):
+                beat, duration, notes = bar[j]
+                beat_, duration_, notes_ = bar_[j]
+                note_count+=1
+                if note_count%2:
+                    child.add_notes(notes, duration)
+                    child_.add_notes(notes_, duration_)
+                else:
+                    child.add_notes(notes_, duration_)
+                    child_.add_notes(notes, duration)
+
+        children += [MusicGene(child), MusicGene(child_)]
+
+        return children
 
     def mutate(self):
         return self
