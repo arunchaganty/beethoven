@@ -8,6 +8,9 @@ from mingus.midi import fluidsynth
 
 from evaluators import *
 from crossovers import *
+from mutators import *
+
+EXPECTED_CONTOUR = [1,1,2,1]
 
 def getNotes(track):
     """ Gets (notes, duration) from all bars"""
@@ -30,9 +33,10 @@ class MusicGene(Gene):
     def __init__(self, track):
         self.track = track
         Gene.__init__(self)
+        self.bachian = False
 
     def __str__(self):
-        str_ = "MusicGene: " + "fitness " + str(self.fitness) + '\n' 
+        str_ = "MusicGene [B=%d]: "%self.bachian + "fitness " + str(self.fitness) + '\n' 
         str_ += str(self.track)
         return str_
 
@@ -43,16 +47,62 @@ class MusicGene(Gene):
         return str(self.track)
 
     def get_fitness(self):
-        fitness = 0.1
+        val = 0
+        val += rhythm_fluctuation_evaluator(self.track)
+        val += pitch_class_fluctuation_evaluator(self.track)
+        val += dissonant_note_evaluator(self.track)
+        val += rhythm_fluctuation_evaluator(self.track)
+        val += numericEvaluation(self.track)
+        fitness = val
         return fitness
 
     def mate(self, other):
-        return self
+        children = single_pt_crossover(self, other)
+        return children
+
+    def mutate(self):
+        algo = random.randint(0,2)
+        if algo == 0:
+            child = MusicGene(one_note_mutator(self.track))
+        if algo == 1:
+            child = MusicGene(transpose_bar_mutator(self.track))
+        if algo == 2:
+            child = MusicGene(permute_duration_mutator(self.track))
+        return child
+
+    def play(self):
+        fluidsynth.play_Track(self.track)
+
+class CompositionGene(Gene):
+    def __init__(self, track):
+        self.track = track
+        Gene.__init__(self)
+
+    def __str__(self):
+        str_ = "CompositionGene: " + "fitness " + str(self.fitness) + '\n' 
+        str_ += str(self.track)
+        return str_
+
+    def __repr__(self):
+        return str(self)
+
+    def print_track(self, track):
+        return str(self.track)
+
+    def get_fitness(self):
+        val = 0
+        val += rhythmicContinuity(self.track)
+        val += rhythmicContour(self.track, EXPECTED_CONTOUR)
+        fitness = val
+        return fitness
+
+    def mate(self, other):
+        return []
         #return interleaved_single_pt_crossover(self, other)
 
     def mutate(self):
         return self
 
     def play(self):
-        fluidsynth.play_Track(track)
+        fluidsynth.play_Track(self.track)
 

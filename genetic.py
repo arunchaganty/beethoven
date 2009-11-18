@@ -35,7 +35,7 @@ def roulette(items, num, get=lambda x: x):
     selection = [ binsearch(items, random() *  (get(max_value)), get) for i in xrange(num)]
     return selection
 
-def evolve(population, population_limit=100):
+def evolve(population, population_limit=100, mutation_rate=0.1):
     """
     Evolve the initial population a generation at a time
     Expects that the input population is a class that computes 
@@ -43,7 +43,6 @@ def evolve(population, population_limit=100):
     """
     # Initialise the algorithm
 
-    mutation_rate = MUTATION_RATE
     population.sort(key = lambda x: x.fitness, reverse=True)
 
     while(True):

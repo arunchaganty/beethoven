@@ -14,10 +14,12 @@ import random
 import genetic
 from Gene import *
 from MusicGene import *
-from mingus.midi import MidiFileIn 
+from mingus.midi import *
 
 SF2 = "/usr/share/soundfonts/fluidr3/FluidR3GM.SF2"
 DRIVER = "alsa"
+
+DB_DIR = "awesomeSet"
 
 def chop_evenly(track, n_bars):
     """
@@ -39,17 +41,17 @@ def chop_evenly(track, n_bars):
     return tracks 
 
 def import_midi_db(dir):
-    mid_re = re.compile("[^.]*\.mid")
+    mid_re = re.compile(".*\.mid$")
     population = []
     for root, dirs, files in os.walk(dir):
         for file in files:
-            print file
+            print file 
             if mid_re.match(file):
                 composition, bpm = MidiFileIn.MIDI_to_Composition(os.path.join(root,file))
-                for track in composition:
-                    tracks = chop_evenly(track, 16)
-                    genes = [MusicGene(track) for track in tracks]
-                    population += genes
+                genes = [MusicGene(track) for track in  composition]
+                for gene in genes:
+                    gene.bachian = True
+                population += genes
 
     return population
 
@@ -70,6 +72,13 @@ def import_population(filename):
 
     return population
 
+def save_tracks(population):
+    for i in xrange(len(population)):
+        gene = population[i]
+        if (gene.bachian): continue
+            
+        MidiFileOut.write_Track("HannaMontana-%d.mid"%(i), gene.track)
+
 def print_popluation(population, play=False, all=False):
     if all:
         cnt = len(population)
@@ -81,6 +90,7 @@ def print_popluation(population, play=False, all=False):
 
     for i in xrange(cnt):
         track = population[i]
+        if track.bachian: continue
         print "Track #%d:"%i
         print track
         if play: 
@@ -112,20 +122,25 @@ if __name__ == "__main__":
             sys.exit(-1)
 
     if play: fluidsynth.init(SF2, DRIVER)
-    #population = import_midi_db("test")
-    population = import_population("initial.db")
-    g = genetic.evolve(population)
+    population = import_midi_db(DB_DIR)
+    #population = import_population("initial.db")
+    g = genetic.evolve(population, 200, 0.7)
 
     print "Generation #%d (size=%d)"%(0, len(population))
     #if verbose:
     #    print_popluation(population, play, all)
 
-    for i in xrange(100):
+    for i in xrange(20):
         pop = g.next()
         #if verbose:
         #    print_popluation(population, play, all)
         print "Generation #%d (size=%d)"%((i+1),len(population))
     if verbose:
         print_popluation(population, play, True)
+
+    #Save stuff!
+    save_tracks(population)
+
+    
     
         

@@ -25,19 +25,19 @@ def numericEvaluation(track):
 
     keyCentric_ = [0.1, 0.3, 0.5]
 
-    noteDensity_ = [0.05, 0.175, 0.25]
+#    noteDensity_ = [0.05, 0.175, 0.25]
     restDensity_  = [0.002, 0.002, 0.006]
-    rhythmicRange_ = [0.1, 0.1333, 0.2]
-    rhythmicVariety_ = [0.1, 0.25, 0.35]
+#    rhythmicRange_ = [0.1, 0.1333, 0.2]
+#    rhythmicVariety_ = [0.1, 0.25, 0.35]
 
     val = 0
 #    val += rangeCompare(pitchVariety(track), pitchVariety_)
     val += rangeCompare(keyCentric(track), keyCentric_)
     rhy_features = rhythmEvaluator(track)
-    val += rangeCompare(rhy_features[0], noteDensity_)
+#    val += rangeCompare(rhy_features[0], noteDensity_)
     val += rangeCompare(rhy_features[1], restDensity_)
-    val += rangeCompare(rhy_features[2], rhythmicRange_)
-    val += rangeCompare(rhy_features[3], rhythmicVariety_)
+#    val += rangeCompare(rhy_features[2], rhythmicRange_)
+#    val += rangeCompare(rhy_features[3], rhythmicVariety_)
 
     return val
 
@@ -277,32 +277,57 @@ def syncopation(track):
     return float(offNotes)/noteCount
 
 def rhythm_fluctuation_evaluator(track):
-	"""
-	Evalution function which rewards lower no
-	of rhythm fluctuations.
-	Returns total no of notes / total no of 
-	rhythm fluctuations
-	"""
-	if len(track.bars) == 0:
-		return -1
-	count=0
-	time=0
-	time_prev=0
-	transition=0
-	for bar in track.bars:
-		for beat, duration, notes in bar:
-			time_prev = time
-			if len(notes) == 0:
-				time=-1/duration
-			else:
-				time = 1/duration
-			if time_prev != time:
-				transition=transition+1
-			count=count+1
-	return float(count)/transition
+    """
+    Evalution function which rewards lower no
+    of rhythm fluctuations.
+    Returns total no of notes / total no of 
+    rhythm fluctuations
+    """
+    if len(track.bars) == 0:
+        return -1
+    count=0
+    time=0
+    time_prev=0
+    transition=0
+    for bar in track.bars:
+        for beat, duration, notes in bar:
+            time_prev = time
+            if len(notes) == 0:
+                time=-1/duration
+            else:
+                time = 1/duration
+            if time_prev != time:
+                transition=transition+1
+            count=count+1
+    return float(count)/transition
 
 def dissonant_note_evaluator(track):
     var = [0, 0.4, 0.8]
     val = rangeCompare(dissonance(track), var)
     return val
+
+def pitch_class_fluctuation_evaluator(track):
+    """
+    Evaluation function which counts the no of 
+    pitch class jumps as compared to the total
+    no of jumps, and it returns the inverse of this
+    ratio, thus rewarding same pitch class
+    """
+    if len(track.bars) == 0:
+        return -1
+    count=0
+    note_cur=0
+    note_prev=0
+    note_diff=0
+    for bar in track.bars:
+        for beat, duration, note_things in bar:
+            if len(note_things) == 0:
+                continue
+            else:
+                note_cur = notes.note_to_int(note_things[0].name) + 12*note_things[0].octave
+                if (note_cur - note_prev > 12) or (note_cur - note_prev < -12):
+                    note_diff +=1
+                count +=1
+                note_prev=note_cur
+    return count/note_diff
 
