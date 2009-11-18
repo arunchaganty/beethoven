@@ -275,3 +275,29 @@ def syncopation(track):
             noteCount += 1
 
     return float(offNotes)/noteCount
+
+def rhythm_fluctuation_evaluator(track):
+	"""
+	Evalution function which rewards lower no
+	of rhythm fluctuations.
+	Returns total no of notes / total no of 
+	rhythm fluctuations
+	"""
+	if len(track.bars) == 0:
+		return -1
+	count=0
+	time=0
+	time_prev=0
+	transition=0
+	for bar in track.bars:
+		for beat, duration, notes in bar:
+			time_prev = time
+			if len(notes) == 0:
+				time=-1/duration
+			else:
+				time = 1/duration
+			if time_prev != time:
+				transition=transition+1
+			count=count+1
+	return float(count)/transition
+
