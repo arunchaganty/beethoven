@@ -9,6 +9,37 @@ import MusicGene
 
 import math
 
+def rangeCompare(value, range):
+    if (value < range[0]):
+        return 10*(value/range[0] - 1)
+    elif (value > range[2]):
+        return 10*(1 - value/range[2])
+    else:
+        # Weighted by how much variation there actually is
+        return -abs(range[0] - value)/(range[2] - range[0])
+
+def numericEvaluation(track):
+    """ Evaluates the track based on numeric functions """
+
+    pitchVariety_ = [0.15, 0.25, 0.45]
+
+    keyCentric_ = [0.0, 0.28, 0.45]
+
+    noteDensity_ = [0.05, 0.175, 0.25]
+    restDensity_  = [0.002, 0.002, 0.006]
+    rhythmicRange_ = [0.1, 0.1333, 0.2]
+    rhythmicVariety_ = [0.1, 0.25, 0.35]
+
+    val = 0
+    val += (pitchVariety(track), pitchVariety_)
+    val += (keyCentric(track), keyCentric_)
+    rhy_features = rhythmEvaluator(track)
+    val += (rhy_features[0], noteDensity_)
+    val += (rhy_features[1], restDensity_)
+    val += (rhy_features[2], rhythmicRange_)
+    val += (rhy_features[3], rhythmicVariety_)
+
+    return val
 
 # PitchFeatures
 def pitchEvaluator(track):
@@ -143,7 +174,7 @@ def dissonance(track):
     return float(dissonantCount)/(noteCount-1)
 
 # RhythmEvaluators:
-def rhythmEvalutor(track):
+def rhythmEvaluator(track):
     """ Combines all the rhythm evalutions in one for efficiency"""
 
     quantaCount = 0
@@ -167,7 +198,7 @@ def rhythmEvalutor(track):
 
             quantaCount += (128/duration)   # The largest duration (remember it's inverse) 128
 
-            durations = durations.add([duration])
+            durations.add(duration)
 
             if duration > max_duration:
                 max_duration = duration
@@ -214,7 +245,7 @@ def rhythmicVariety(track):
     durations = set([])
     trackNotes = MusicGene.getNotes(track)
     for notes, duration in trackNotes:
-        durations = durations.add([duration])
+        durations.add(duration)
 
     return float(len(durations))/16
 
@@ -239,7 +270,7 @@ def syncopation(track):
     noteCount = 0
     for bar in track:
         for beat, duration, note in bar:
-            if duration <= 4 and math.modf(4*beat/0.25)[0] != 0:
+            if duration <= 4 and math.modf(4*beat)[0] != 0:
                 offNotes += 1
             noteCount += 1
 
