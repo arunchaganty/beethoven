@@ -16,14 +16,14 @@ def rangeCompare(value, range):
         return 10*(1 - value/range[2])
     else:
         # Weighted by how much variation there actually is
-        return -abs(range[0] - value)/(range[2] - range[0])
+        return 10 - abs(range[0] - value)/(range[2] - range[0])
 
 def numericEvaluation(track):
     """ Evaluates the track based on numeric functions """
 
-    pitchVariety_ = [0.15, 0.25, 0.45]
+#    pitchVariety_ = [0.15, 0.25, 0.45]
 
-    keyCentric_ = [0.0, 0.28, 0.45]
+    keyCentric_ = [0.1, 0.3, 0.5]
 
     noteDensity_ = [0.05, 0.175, 0.25]
     restDensity_  = [0.002, 0.002, 0.006]
@@ -31,13 +31,13 @@ def numericEvaluation(track):
     rhythmicVariety_ = [0.1, 0.25, 0.35]
 
     val = 0
-    val += (pitchVariety(track), pitchVariety_)
-    val += (keyCentric(track), keyCentric_)
+#    val += rangeCompare(pitchVariety(track), pitchVariety_)
+    val += rangeCompare(keyCentric(track), keyCentric_)
     rhy_features = rhythmEvaluator(track)
-    val += (rhy_features[0], noteDensity_)
-    val += (rhy_features[1], restDensity_)
-    val += (rhy_features[2], rhythmicRange_)
-    val += (rhy_features[3], rhythmicVariety_)
+    val += rangeCompare(rhy_features[0], noteDensity_)
+    val += rangeCompare(rhy_features[1], restDensity_)
+    val += rangeCompare(rhy_features[2], rhythmicRange_)
+    val += rangeCompare(rhy_features[3], rhythmicVariety_)
 
     return val
 
@@ -300,4 +300,9 @@ def rhythm_fluctuation_evaluator(track):
 				transition=transition+1
 			count=count+1
 	return float(count)/transition
+
+def dissonant_note_evaluator(track):
+    var = [0, 0.4, 0.8]
+    val = rangeCompare(dissonance(track), var)
+    return val
 

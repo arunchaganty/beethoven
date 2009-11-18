@@ -14,5 +14,5 @@ if __name__ == "__main__":
     composition, bpm = MidiFileIn.MIDI_to_Composition(filename)
     track = composition[0]
 
-    print "%s %s %s %s"%(filename, evaluators.pitchEvaluator(track), evaluators.tonalityEvaluator(track), evaluators.rhythmEvaluator(track))
+    print "%s %s"%(filename, evaluators.numericEvaluation(track))
 
