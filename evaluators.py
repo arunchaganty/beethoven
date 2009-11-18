@@ -11,13 +11,14 @@ import math
 
 
 # PitchFeatures
-def pitchFeatures(track):
-    trackNotes = MusicGent.getNotes(track)
+def pitchEvaluator(track):
+    trackNotes = MusicGene.getNotes(track)
 
     pitchesHeard = set([])
     noteCount = 0
-    for note, duration in trackNotes:
-        pitchesHeard = pitchesHeard.union(int(note))
+    for notes, duration in trackNotes:
+        if len(notes):
+            pitchesHeard.add(int(notes[0]))
         noteCount += 1
     min_pitch, max_pitch  = min(pitchesHeard), max(pitchesHeard)
 
@@ -25,53 +26,121 @@ def pitchFeatures(track):
     if (max_pitch - min_pitch) > 24: 
         pitchRange_ = 1
     else: 
-        pitchRange_ = (max_pitch - min_pitch)/24
+        pitchRange_ = float(max_pitch - min_pitch)/24
 
     features = (pitchVariety_, pitchRange_)
 
     return features
 
 def pitchVariety(track):
-    trackNotes = MusicGent.getNotes(track)
+    trackNotes = MusicGene.getNotes(track)
 
     pitchesHeard = set([])
     noteCount = 0
-    for note, duration in trackNotes:
-        pitchesHeard = pitchesHeard.union(int(note))
+    for notes, duration in trackNotes:
+        if len(notes):
+            pitchesHeard.add(int(notes[0]))
         noteCount += 1
     return float(len(pitchesHeard))/noteCount
 
 def pitchRange(track):
-    trackNotes = MusicGent.getNotes(track)
+    trackNotes = MusicGene.getNotes(track)
 
     max_pitch = 0
     min_pitch = 1000    # Randomly huge number
     pitchesHeard = set([])
     noteCount = 0
-    for note, duration in trackNotes:
-        if int(note) < min_pitch:
-            min_pitch = int(note)
-        elif int(note) > min_pitch:
-            max_pitch = int(note)
+    for notes, duration in trackNotes:
+        if len(notes):
+            if int(notes[0]) < min_pitch:
+                min_pitch = int(notes[0])
+            elif int(notes[0]) > max_pitch:
+                max_pitch = int(notes[0])
     if (max_pitch - min_pitch) > 24: return 1
-    else: return (max_pitch - min_pitch)/24
+    else: return float(max_pitch - min_pitch)/24
 
 # TonalityFeatures
 
-def tonalityEvaluators(track):
-    pass
+def isTonic(key, note):
+    if isinstance(key, Note): key = key.name
+    if isinstance(note, Note): note = note.name
+    if (note == key) or (note == intervals.fifth(key, note)):   # Dominant or tonic
+        return True
+    else:
+        return False
+
+def tonalityEvaluator(track):
+    primaryQuantaCount = 0 
+    nonScaleCount = 0 
+    quantaCount = 0 
+    dissonantCount = 0
+    noteCount = 0
+
+    note_ = None
+    for bar in track:
+        for beat, duration, notes in bar:
+            if len(notes) > 0:
+                if isTonic(bar.key, notes[0]):
+                    primaryQuantaCount+=(128/duration)
+
+                if notes[0] not in scales.get_notes(bar.key.name):
+                    nonScaleCount+=(128/duration)
+
+                note = notes[0]
+                if note_ == None: note_ = note
+                if intervals.is_dissonant(note_.name, note.name):
+                    dissonantCount += 1
+                noteCount += 1
+                note_ = note
+
+            quantaCount += (128/duration)
+
+    keyCentric_ = float(primaryQuantaCount)/quantaCount
+    nonScaleNotes_ = float(nonScaleCount)/quantaCount
+    dissonance_ = float(dissonantCount)/(noteCount-1)
+
+    features = (keyCentric_, nonScaleNotes_, dissonance_)
+
+    return features
 
 def keyCentric(track):
-    pass
+    primaryQuantaCount = 0 
+    quantaCount = 0 
+    for bar in track:
+        for beat, duration, notes in bar:
+            if len(notes) > 0:
+                if isTonic(bar.key, notes[0]):
+                    primaryQuantaCount+=(128/duration)
+            quantaCount += (128/duration)
+    return float(primaryQuantaCount)/quantaCount
 
 def nonScaleNotes(track):
-    pass
-
-def nonScaleNotes(track):
-    pass
+    nonScaleCount = 0 
+    quantaCount = 0 
+    for bar in track:
+        for beat, duration, notes_ in bar:
+            if len(notes_) > 0:
+                if notes_[0] not in scales.get_notes(bar.key.name):
+                    nonScaleCount+=(128/duration)
+            quantaCount += (128/duration)
+    return float(nonScaleCount)/quantaCount
 
 def dissonance(track):
-    pass
+    trackNotes = MusicGene.getNotes(track)
+
+    dissonantCount = 0
+    noteCount = 0
+    note_ = None
+    for notes_, duration in trackNotes:
+        if len(notes_) > 0:
+            note = notes_[0]
+            if note_ == None: note_ = note
+            if intervals.is_dissonant(note_.name, note.name):
+                dissonantCount += 1
+            noteCount += 1
+            note_ = note
+
+    return float(dissonantCount)/(noteCount-1)
 
 # RhythmEvaluators:
 def rhythmEvalutor(track):
@@ -98,7 +167,7 @@ def rhythmEvalutor(track):
 
             quantaCount += (128/duration)   # The largest duration (remember it's inverse) 128
 
-            durations = durations.union([duration])
+            durations = durations.add([duration])
 
             if duration > max_duration:
                 max_duration = duration
@@ -145,7 +214,7 @@ def rhythmicVariety(track):
     durations = set([])
     trackNotes = MusicGene.getNotes(track)
     for notes, duration in trackNotes:
-        durations = durations.union([duration])
+        durations = durations.add([duration])
 
     return float(len(durations))/16
 

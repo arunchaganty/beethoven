@@ -271,6 +271,7 @@ False
 }}}"""
 		if other == None:
 			return 1
+		if not isinstance(other, Note): other = Note(other)
 		s = int(self)
 		o = int(other)
 
