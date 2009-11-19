@@ -47,7 +47,7 @@ def transpose_bar_mutator(track):
 		bar = track.bars[bar_no]
 	#print bar_no
 	#transpose the bar up by a perfect fifth
-	if random.randint(0,1) %2==0:
+	if random.randint(0,1)==0:
 		track.bars[bar_no].transpose("5")
 	else:
 		track.bars[bar_no].transpose("-5")

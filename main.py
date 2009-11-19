@@ -77,7 +77,10 @@ def save_tracks(population):
         gene = population[i]
         if (gene.bachian): continue
             
-        MidiFileOut.write_Track("HannaMontana-%d.mid"%(i), gene.track)
+        try:
+            MidiFileOut.write_Track("HannaMontana-%d-%d.mid"%(i, gene.fitness), gene.track, bpm=64)
+        except:
+            pass
 
 def print_popluation(population, play=False, all=False):
     if all:
@@ -124,13 +127,13 @@ if __name__ == "__main__":
     if play: fluidsynth.init(SF2, DRIVER)
     population = import_midi_db(DB_DIR)
     #population = import_population("initial.db")
-    g = genetic.evolve(population, 200, 0.7)
+    g = genetic.evolve(population, 200, 0.1)
 
     print "Generation #%d (size=%d)"%(0, len(population))
     #if verbose:
     #    print_popluation(population, play, all)
 
-    for i in xrange(20):
+    for i in xrange(40):
         pop = g.next()
         #if verbose:
         #    print_popluation(population, play, all)

@@ -51,7 +51,6 @@ class MusicGene(Gene):
         val += rhythm_fluctuation_evaluator(self.track)
         val += pitch_class_fluctuation_evaluator(self.track)
         val += dissonant_note_evaluator(self.track)
-        val += rhythm_fluctuation_evaluator(self.track)
         val += numericEvaluation(self.track)
         fitness = val
         return fitness
@@ -61,12 +60,10 @@ class MusicGene(Gene):
         return children
 
     def mutate(self):
-        algo = random.randint(0,2)
-        if algo == 0:
+        algo = random.random()
+        if algo < 0.2:
             child = MusicGene(one_note_mutator(self.track))
-        if algo == 1:
-            child = MusicGene(transpose_bar_mutator(self.track))
-        if algo == 2:
+        else:
             child = MusicGene(permute_duration_mutator(self.track))
         return child
 
