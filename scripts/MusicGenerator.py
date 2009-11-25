@@ -12,7 +12,7 @@ class MusicComposer:
     """
 
     def __init__(self, scale):
-        self.scale = scale
+        self.scale = scales.get_notes(scale)
 
     def compose_track(self, n_bars):
         track = Track()
@@ -52,10 +52,10 @@ class NoviceComposer(MusicComposer):
     """Generates notes using a simple state machine"""
     def __init__(self, scale):
         MusicComposer.__init__(self, scale)
-        self.ttable = TransitionTable.IntervallicTransitionTable(scale)
+        self.ttable = TransitionTable.IntervallicTransitionTable(self.scale)
 
     def compose(self):
-        cur_note = "%s-%d"%(random.choice(self.scale), 3)
+        cur_note = "%s-%d"%(random.choice(self.scale), random.choice([1,4]))
         state = (cur_note, cur_note)
         while(1):
             yield cur_note

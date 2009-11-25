@@ -4,10 +4,10 @@ from mingus.containers import *
 
 import re,random
 
-LEAP = 7
+LEAP = 5
 SKIP = 3
 UNISON = 0
-PitchRange = range(1,6)
+PitchRange = range(1,5)
 IntervalRange = range(-11,12)
 
 def xor(x, y):
