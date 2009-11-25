@@ -72,7 +72,7 @@ if __name__ == "__main__":
     play = False
     all = False
 
-    if len(sys.argv) != 3 or len(sys.argv) > 4:
+    if len(sys.argv) != 4:
         print "Usage: %s [-h|-q|-v|-vv] <midi-db> <outdir>"
         sys.exit(-1)
 

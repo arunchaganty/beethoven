@@ -47,7 +47,7 @@ def pitchEvaluator(track):
 
     pitchesHeard = set([])
     noteCount = 0
-    for notes, duration in trackNotes:
+    for beat, duration, notes in trackNotes:
         if len(notes):
             pitchesHeard.add(int(notes[0]))
         noteCount += 1
@@ -68,7 +68,7 @@ def pitchVariety(track):
 
     pitchesHeard = set([])
     noteCount = 0
-    for notes, duration in trackNotes:
+    for beat, duration, notes in trackNotes:
         if len(notes):
             pitchesHeard.add(int(notes[0]))
         noteCount += 1
@@ -81,7 +81,7 @@ def pitchRange(track):
     min_pitch = 1000    # Randomly huge number
     pitchesHeard = set([])
     noteCount = 0
-    for notes, duration in trackNotes:
+    for beat, duration, notes in trackNotes:
         if len(notes):
             if int(notes[0]) < min_pitch:
                 min_pitch = int(notes[0])
@@ -101,6 +101,7 @@ def isTonic(key, note):
         return False
 
 def tonalityEvaluator(track):
+    trackNotes = track.get_notes()
     primaryQuantaCount = 0 
     nonScaleCount = 0 
     quantaCount = 0 
@@ -108,23 +109,22 @@ def tonalityEvaluator(track):
     noteCount = 0
 
     note_ = None
-    for bar in track:
-        for beat, duration, notes in bar:
-            if len(notes) > 0:
-                if isTonic(bar.key, notes[0]):
-                    primaryQuantaCount+=(128/duration)
+    for beat, duration, notes in trackNotes:
+        if len(notes) > 0:
+            if isTonic(bar.key, notes[0]):
+                primaryQuantaCount+=(128/duration)
 
-                if notes[0] not in scales.get_notes(bar.key.name):
-                    nonScaleCount+=(128/duration)
+            if notes[0] not in scales.get_notes(bar.key.name):
+                nonScaleCount+=(128/duration)
 
-                note = notes[0]
-                if note_ == None: note_ = note
-                if intervals.is_dissonant(note_.name, note.name):
-                    dissonantCount += 1
-                noteCount += 1
-                note_ = note
+            note = notes[0]
+            if note_ == None: note_ = note
+            if intervals.is_dissonant(note_.name, note.name):
+                dissonantCount += 1
+            noteCount += 1
+            note_ = note
 
-            quantaCount += (128/duration)
+        quantaCount += (128/duration)
 
     keyCentric_ = float(primaryQuantaCount)/quantaCount
     nonScaleNotes_ = float(nonScaleCount)/quantaCount
@@ -146,14 +146,14 @@ def keyCentric(track):
     return float(primaryQuantaCount)/quantaCount
 
 def nonScaleNotes(track):
+    trackNotes = track.get_notes()
     nonScaleCount = 0 
     quantaCount = 0 
-    for bar in track:
-        for beat, duration, notes_ in bar:
-            if len(notes_) > 0:
-                if notes_[0] not in scales.get_notes(bar.key.name):
-                    nonScaleCount+=(128/duration)
-            quantaCount += (128/duration)
+    for beat, duration, notes in trackNotes:
+        if len(notes_) > 0:
+            if notes_[0] not in scales.get_notes(bar.key.name):
+                nonScaleCount+=(128/duration)
+        quantaCount += (128/duration)
     return float(nonScaleCount)/quantaCount
 
 def dissonance(track):
@@ -162,7 +162,7 @@ def dissonance(track):
     dissonantCount = 0
     noteCount = 0
     note_ = None
-    for notes_, duration in trackNotes:
+    for beat, duration, notes_ in trackNotes:
         if len(notes_) > 0:
             note = notes_[0]
             if note_ == None: note_ = note
@@ -176,6 +176,7 @@ def dissonance(track):
 # RhythmEvaluators:
 def rhythmEvaluator(track):
     """ Combines all the rhythm evalutions in one for efficiency"""
+    trackNotes = track.get_notes()
 
     quantaCount = 0
 
@@ -189,25 +190,24 @@ def rhythmEvaluator(track):
 
     offNotes = 0
 
-    for bar in track:
-        for beat, duration, notes in bar:
-            if len(notes) == 0:
-                restCount += 1
-            else:
-                noteCount += 1
-
-            quantaCount += (128/duration)   # The largest duration (remember it's inverse) 128
-
-            durations.add(duration)
-
-            if duration > max_duration:
-                max_duration = duration
-            if duration < min_duration:
-                min_duration = duration
-
-            if duration <= 4 and math.modf(4*beat/0.25)[0] != 0:
-                offNotes += 1
+    for beat, duration, notes in trackNotes:
+        if len(notes) == 0:
+            restCount += 1
+        else:
             noteCount += 1
+
+        quantaCount += (128/duration)   # The largest duration (remember it's inverse) 128
+
+        durations.add(duration)
+
+        if duration > max_duration:
+            max_duration = duration
+        if duration < min_duration:
+            min_duration = duration
+
+        if duration <= 4 and math.modf(4*beat/0.25)[0] != 0:
+            offNotes += 1
+        noteCount += 1
     noteDensity_ = float(noteCount)/quantaCount
     restDensity_ = float(restCount)/quantaCount
     rhythmicVariety_ = float(len(durations))/16
@@ -223,7 +223,7 @@ def noteDensity(track):
     noteCount = 0
     quantaCount = 0
     trackNotes = track.get_notes()
-    for notes, duration in trackNotes:
+    for beat, duration, notes in trackNotes:
         if len(notes) != 0:
             noteCount += 1
         quantaCount += (128/duration)
@@ -234,7 +234,7 @@ def restDensity(track):
     restCount = 0
     quantaCount = 0
     trackNotes = track.get_notes()
-    for notes, duration in trackNotes:
+    for beat, duration, notes in trackNotes:
         if len(notes) == 0:
             restCount += 1
         quantaCount += (128/duration)
@@ -244,7 +244,7 @@ def restDensity(track):
 def rhythmicVariety(track):
     durations = set([])
     trackNotes = track.get_notes()
-    for notes, duration in trackNotes:
+    for beat, duration, notes in trackNotes:
         durations.add(duration)
 
     return float(len(durations))/16
@@ -255,7 +255,7 @@ def rhythmicRange(track):
     min_duration = 128
     max_duration = 0.25
     trackNotes = track.get_notes()
-    for notes, duration in trackNotes:
+    for beat, duration, notes in trackNotes:
         if duration > max_duration:
             max_duration = duration
         if duration < min_duration:
@@ -268,11 +268,11 @@ def syncopation(track):
     # It only looks at off-beat syncopation
     offNotes = 0
     noteCount = 0
-    for bar in track:
-        for beat, duration, note in bar:
-            if duration <= 4 and math.modf(4*beat)[0] != 0:
-                offNotes += 1
-            noteCount += 1
+    trackNotes = track.get_notes()
+    for beat, duration, notes in trackNotes:
+        if duration <= 4 and math.modf(4*beat)[0] != 0:
+            offNotes += 1
+        noteCount += 1
 
     return float(offNotes)/noteCount
 
@@ -289,16 +289,16 @@ def rhythm_fluctuation_evaluator(track):
     time=0
     time_prev=0
     transition=0
-    for bar in track.bars:
-        for beat, duration, notes in bar:
-            time_prev = time
-            if len(notes) == 0:
-                time=-1/duration
-            else:
-                time = 1/duration
-            if time_prev != time:
-                transition=transition+1
-            count=count+1
+    trackNotes = track.get_notes()
+    for beat, duration, notes in trackNotes:
+        time_prev = time
+        if len(notes) == 0:
+            time=-1/duration
+        else:
+            time = 1/duration
+        if time_prev != time:
+            transition=transition+1
+        count=count+1
     return float(count)/transition
 
 def dissonant_note_evaluator(track):
@@ -319,15 +319,19 @@ def pitch_class_fluctuation_evaluator(track):
     note_cur=0
     note_prev=0
     note_diff=0
-    for bar in track.bars:
-        for beat, duration, note_things in bar:
-            if len(note_things) == 0:
-                continue
-            else:
-                note_cur = notes.note_to_int(note_things[0].name) + 12*note_things[0].octave
-                if (note_cur - note_prev > 12) or (note_cur - note_prev < -12):
-                    note_diff +=1
-                count +=1
-                note_prev=note_cur
+    trackNotes = track.get_notes()
+    for beat, duration, notes_ in trackNotes:
+        if len(notes_) == 0:
+            continue
+        else:
+            note_cur = notes.note_to_int(notes_[0].name) + 12*notes_[0].octave
+            if (note_cur - note_prev > 12) or (note_cur - note_prev < -12):
+                note_diff +=1
+            count +=1
+            note_prev=note_cur
+
+    if note_diff == 0:
+        return count
+
     return count/note_diff
 
