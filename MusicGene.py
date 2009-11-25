@@ -12,14 +12,6 @@ from mutators import *
 
 EXPECTED_CONTOUR = [1,1,2,1]
 
-def getNotes(track):
-    """ Gets (notes, duration) from all bars"""
-    assert(isinstance(track, Track))
-
-    for bar in track:
-        for beat, duration, notes in bar:
-            yield notes,duration
-
 def convert_to_track(track):
     """ Convert our notation of a track to a mingus one """
     assert(not isinstance(track, Track))

@@ -43,7 +43,7 @@ def numericEvaluation(track):
 
 # PitchFeatures
 def pitchEvaluator(track):
-    trackNotes = MusicGene.getNotes(track)
+    trackNotes = track.get_notes()
 
     pitchesHeard = set([])
     noteCount = 0
@@ -64,7 +64,7 @@ def pitchEvaluator(track):
     return features
 
 def pitchVariety(track):
-    trackNotes = MusicGene.getNotes(track)
+    trackNotes = track.get_notes()
 
     pitchesHeard = set([])
     noteCount = 0
@@ -75,7 +75,7 @@ def pitchVariety(track):
     return float(len(pitchesHeard))/noteCount
 
 def pitchRange(track):
-    trackNotes = MusicGene.getNotes(track)
+    trackNotes = track.get_notes()
 
     max_pitch = 0
     min_pitch = 1000    # Randomly huge number
@@ -157,7 +157,7 @@ def nonScaleNotes(track):
     return float(nonScaleCount)/quantaCount
 
 def dissonance(track):
-    trackNotes = MusicGene.getNotes(track)
+    trackNotes = track.get_notes()
 
     dissonantCount = 0
     noteCount = 0
@@ -222,7 +222,7 @@ def rhythmEvaluator(track):
 def noteDensity(track):
     noteCount = 0
     quantaCount = 0
-    trackNotes = MusicGene.getNotes(track)
+    trackNotes = track.get_notes()
     for notes, duration in trackNotes:
         if len(notes) != 0:
             noteCount += 1
@@ -233,7 +233,7 @@ def noteDensity(track):
 def restDensity(track):
     restCount = 0
     quantaCount = 0
-    trackNotes = MusicGene.getNotes(track)
+    trackNotes = track.get_notes()
     for notes, duration in trackNotes:
         if len(notes) == 0:
             restCount += 1
@@ -243,7 +243,7 @@ def restDensity(track):
 
 def rhythmicVariety(track):
     durations = set([])
-    trackNotes = MusicGene.getNotes(track)
+    trackNotes = track.get_notes()
     for notes, duration in trackNotes:
         durations.add(duration)
 
@@ -254,7 +254,7 @@ def rhythmicRange(track):
     # Thus, 1/4 => 4
     min_duration = 128
     max_duration = 0.25
-    trackNotes = Musictrack.getNotes(track)
+    trackNotes = track.get_notes()
     for notes, duration in trackNotes:
         if duration > max_duration:
             max_duration = duration
