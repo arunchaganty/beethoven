@@ -11,6 +11,8 @@ import time
 import re
 import random
 
+import optparse
+
 import genetic
 from Gene import *
 from MusicGene import *
@@ -19,25 +21,42 @@ from mingus.midi import *
 SF2 = "/usr/share/soundfonts/fluidr3/FluidR3GM.SF2"
 DRIVER = "alsa"
 
-DB_DIR = "awesomeSet"
+def ticker():
+    i = 0
+    chr = ['|','/','-','\\']
+    while True:
+        i = (i+1) % (len(chr))
+        sys.stderr.write("\b%s"%chr[i])
+        yield
 
 def import_midi_db(dir):
+    sys.stderr.write("Importing samples from %s:  "%mididb)
+    tick = ticker()
+
     mid_re = re.compile(".*\.mid$")
     population = []
     for root, dirs, files in os.walk(dir):
         for file in files:
-            print file 
+            tick.next()
             if mid_re.match(file):
                 composition, bpm = MidiFileIn.MIDI_to_Composition(os.path.join(root,file))
                 genes = [MusicGene(track) for track in  composition]
                 for gene in genes:
                     gene.bachian = True
                 population += genes
-
+    sys.stderr.write("\n")
     return population
 
 def save_tracks(population, outdir):
+    try:
+        os.stat(outdir)
+    except OSError:
+        os.mkdir(outdir)
+
+    sys.stderr.write("Saving riff database:  ") 
+    tick = ticker()
     for i in xrange(len(population)):
+        tick.next()
         gene = population[i]
         if (gene.bachian): continue
             
@@ -46,6 +65,7 @@ def save_tracks(population, outdir):
         except:
             print "Error writing %s/HannaMontana-%d-%d.mid"%(outdir, i, gene.fitness)
             pass
+    sys.stderr.write("\n")
 
 def print_popluation(population, play=False, all=False):
     if all:
@@ -66,49 +86,64 @@ def print_popluation(population, play=False, all=False):
             time.sleep(1)
     return
 
+def create_riff_db(initial_pop, options):
+    """
+    Create a database of riffs to be used by the "composer" to generate it's master pieces
+    """
+
+    # Ideally categorise or create new riff_dbs for every scale?
+    sys.stderr.write("Creating riff database:  ") 
+    tick = ticker()
+
+    g = genetic.evolve(initial_pop, options.pop_limit, options.mutation_rate)
+    for i in xrange(options.generations):
+        tick.next()
+        g.next()
+    sys.stderr.write("\n") 
+    pop = g.next()
+
+    return pop
 
 if __name__ == "__main__":
     verbose = False
     play = False
     all = False
 
-    if len(sys.argv) != 4:
-        print "Usage: %s [-h|-q|-v|-vv] <midi-db> <outdir>"
-        sys.exit(-1)
+    parser = optparse.OptionParser()
+    parser.add_option("-l", "--loud", action="store_true", dest="loud",
+            help="Play generated tracks", default=False)
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
+            help="Print out generated tracks", default=True)
+    parser.add_option("-n", "--num", type="int", dest="num",
+            help="Print/play only the top 'n' tracks", default=3)
+    parser.add_option("-g", "--generations", type="int", dest="generations",
+            help="Number of generations to be evolved", default=20)
+    parser.add_option("-p", "--population-limit", type="int", dest="pop_limit",
+            help="Population Limit", default=200)
+    parser.add_option("-m", "--mutation-rate", type="float", dest="mutation_rate",
+            help="Population Limit", default=0.3)
+    parser.add_option("-c", "--create", action="store_true", dest="create",
+            help="Use input MIDI to create riffs", default=False)
+    parser.add_option("-i", "--input", dest="input",
+            help="Input MIDI directory")
+    parser.add_option("-o", "--output", dest="output",
+            help="Output MIDI directory")
 
-    if sys.argv[1] == "-h":
-        print "Usage: %s [-v|-vv|-h]"%(sys.argv[0])
-        sys.exit(0)
-    elif sys.argv[1] == "-q" or sys.argv[1] == "--quiet":
-        pass
-    elif sys.argv[1] == "-v" or sys.argv[1] == "--verbose":
-        verbose = True
-    elif sys.argv[1] == "-vv" or sys.argv[1] == "--very-verbose":
-        verbose = True
-        play = True
-    elif sys.argv[1] == "-vvv" or sys.argv[1] == "--very-verbose":
-        verbose = True
-        play = True
-        all = True
+    (options, args) = parser.parse_args()
+
+    if options.loud:
+        fluidsynth.init(SF2, DRIVER)
+
+    mididb = options.input
+    outdir = options.output
+
+    if options.create:
+        initial_pop = import_midi_db(mididb)
+        db = create_riff_db(initial_pop, options)
+        save_tracks(db, outdir)
     else:
-        print "Usage: %s [-v|-vv|-h]"%(sys.argv[0])
-        sys.exit(-1)
-
-    mididb = sys.argv[2]
-    outdir = sys.argv[3]
-
-    if play: fluidsynth.init(SF2, DRIVER)
-    population = import_midi_db(mididb)
-    g = genetic.evolve(population, 200, 0.1)
-
-    print "Generation #%d (size=%d)"%(0, len(population))
-
-    for i in xrange(40):
-        pop = g.next()
-        print "Generation #%d (size=%d)"%((i+1),len(population))
-    if verbose:
-        print_popluation(population, play, True)
-
-    save_tracks(population, outdir)
+        sys.stderr.write("Loading riff db from %s\n"%mididb)
+        initial_pop = import_midi_db(mididb)
+        # do something
 
         
